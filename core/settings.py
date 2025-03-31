@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'payment',
-    'broadcast',
+    'posting',
 ]
 
 MIDDLEWARE = [
@@ -89,3 +89,6 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_TOKEN')
