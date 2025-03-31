@@ -20,3 +20,19 @@ class PostingMessage(models.Model):
     class Meta:
         verbose_name = 'Публикация'
         verbose_name_plural = 'Публикации'
+
+class StartCommandResponse(models.Model):
+    text = models.TextField()
+
+    def save(self, *args, **kwargs):
+        if StartCommandResponse.objects.exists():
+            # Разрешаем обновлять только первую запись
+            self.pk = StartCommandResponse.objects.first().pk
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "Приветственное сообщение"
+    
+    class Meta:
+        verbose_name = 'Приветственное сообщение'
+        verbose_name_plural = 'Приветственное сообщение'

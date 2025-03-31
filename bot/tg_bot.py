@@ -12,6 +12,8 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 
+from commands import start_command
+
 from django.conf import settings
 
 import logging
@@ -25,7 +27,7 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("TelegramBot")
 
 TOKEN = settings.TELEGRAM_BOT_TOKEN
 
@@ -34,11 +36,17 @@ async def main():
         bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
         dp = Dispatcher()
         
+        dp.include_router(
+            start_command.router,
+        )
         
         await asyncio.gather(
             bot.delete_webhook(drop_pending_updates=True),
             dp.start_polling(bot),
         )
+        
+    except Exception as e:
+        logger.error(f"Error: {e}")
     finally:
         await bot.close()
 

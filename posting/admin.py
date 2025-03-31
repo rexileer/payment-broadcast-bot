@@ -1,8 +1,17 @@
 from django.contrib import admin
-from .models import PostingMessage
+from .models import PostingMessage, StartCommandResponse
 from django.utils.html import format_html
 from django.forms import FileInput
 from django.db import models
+
+
+@admin.register(StartCommandResponse)
+class StartCommandResponseAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return not StartCommandResponse.objects.exists()  # Разрешаем добавлять, только если нет записей
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # Запрещаем удаление
 
 
 
