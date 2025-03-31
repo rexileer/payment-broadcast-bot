@@ -9,12 +9,9 @@ import django
 django.setup()
 
 import asyncio
-from aiogram import Bot, Dispatcher
-from aiogram.client.bot import DefaultBotProperties
-
+from aiogram import Dispatcher
 from commands import start_command
-
-from django.conf import settings
+from bot.config import bot
 
 import logging
 
@@ -29,11 +26,9 @@ logging.basicConfig(
 
 logger = logging.getLogger("TelegramBot")
 
-TOKEN = settings.TELEGRAM_BOT_TOKEN
 
 async def main():
     try:
-        bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
         dp = Dispatcher()
         
         dp.include_router(
