@@ -1,3 +1,41 @@
 from django.db import models
+from users.models import User
 
-# Create your models here.
+class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payments")
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20, 
+        choices=[("pending", "В ожидании"), ("paid", "Оплачено"), ("cancelled", "Отменено")], 
+        default="pending",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)  # из YooKassa
+    
+    def __str__(self):
+        return f"Платеж {self.id} от {self.user.telegram_id} на {self.amount} ({self.status})"
+
+    
+    class Meta:
+        verbose_name = 'Платеж'
+        verbose_name_plural = 'Платежи'
+        
+class PaymentMessage(models.Model):
+    """
+    Платежное сообщение
+    Должно отправляться раз в 6 месяцев для каждого отдельного пользователя
+    """
+    text = models.TextField()
+
+    def save(self, *args, **kwargs):
+        if PaymentMessage.objects.exists():
+            # Разрешаем обновлять только первую запись
+            self.pk = PaymentMessage.objects.first().pk
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "Платежное сообщение"
+    
+    class Meta:
+        verbose_name = 'Платежное сообщение'
+        verbose_name_plural = 'Платежное сообщение'
