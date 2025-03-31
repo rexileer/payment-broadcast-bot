@@ -12,6 +12,10 @@ router = Router()
 @router.message(CommandStart())
 async def start(message: Message):
     logger.info(f"Received /start command from {message.from_user.id}")
-    text = await get_start_message()
+    try:
+        text = await get_start_message()
+    except Exception as e:
+        logger.error(f"Error getting start message: {e}")
+        text = "Добро пожаловать в бота"
     await message.delete()
     await message.answer(text, reply_markup=None)
