@@ -3,7 +3,7 @@ import threading
 import logging
 from bot.config import bot
 from aiogram.types import FSInputFile
-from bot.services.user_service import get_all_users
+from bot.services.user_service import get_all_users, unactivate_user
 from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter
 
 logger = logging.getLogger('Posting')
@@ -24,6 +24,8 @@ async def send_posting_to_users(posting):
     users = await get_all_users()
 
     for user in users:
+        if user.is_active == False:
+            continue
         await asyncio.sleep(0.05)  # Минимальная задержка
         await send_message(user.telegram_id, text, file, media_type)
 
@@ -46,7 +48,8 @@ async def send_message(user_id, text=None, file=None, media_type=None):
         logger.info(f"Сообщение отправлено {user_id}")
 
     except TelegramForbiddenError:
-        logger.info(f"Пользователь {user_id} заблокировал бота. Сообщение не отправлено.")
+        logger.info(f"Пользователь {user_id} заблокировал бота. Сообщение не отправлено. Деактивируем пользователя.")
+        await unactivate_user(user_id)
 
     except TelegramRetryAfter as e:
         logger.error(f"⏳ Превышен лимит запросов к Telegram API: ожидание {e.retry_after} сек.")
