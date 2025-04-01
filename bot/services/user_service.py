@@ -15,6 +15,14 @@ def activate_user(telegram_id):
     return User.objects.filter(telegram_id=telegram_id).update(is_active=True)
 
 @sync_to_async
+def banned_user(telegram_id):
+    return User.objects.filter(telegram_id=telegram_id).update(not_banned=False)
+
+@sync_to_async
+def unbanned_user(telegram_id):
+    return User.objects.filter(telegram_id=telegram_id).update(not_banned=True)
+
+@sync_to_async
 def get_user(telegram_id):
     try:
         return User.objects.get(telegram_id=telegram_id)

@@ -5,6 +5,7 @@ from datetime import timedelta
 class User(models.Model):
     telegram_id = models.BigIntegerField(unique=True)
     is_active = models.BooleanField(default=True)
+    not_banned = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def _default_subscription():
