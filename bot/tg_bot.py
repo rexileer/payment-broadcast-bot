@@ -10,8 +10,7 @@ django.setup()
 
 import asyncio
 from aiogram import Dispatcher
-from commands import start_command
-from callbacks import payment_callback
+from commands import start_command, payment_command
 from bot.config import bot
 
 import logging
@@ -34,12 +33,12 @@ async def main():
         
         dp.include_routers(
             start_command.router,
-            payment_callback.router,
+            payment_command.router,
         )
         
         await asyncio.gather(
             bot.delete_webhook(drop_pending_updates=True),
-            dp.start_polling(bot),
+            dp.start_polling(bot, skip_updates=False),
         )
         
     except Exception as e:

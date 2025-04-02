@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PaymentMessage
+from .models import PaymentMessage, Payment
 
 admin.site.site_header = "Редактирование"
 
@@ -11,3 +11,8 @@ class StartCommandResponseAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False  # Запрещаем удаление
 
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'amount', 'status', 'transaction_id')
+    search_fields = ('user__telegram_id', 'transaction_id')
+    list_filter = ('status',)
