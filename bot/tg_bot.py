@@ -11,6 +11,7 @@ django.setup()
 import asyncio
 from aiogram import Dispatcher
 from commands import start_command
+from callbacks import payment_callback
 from bot.config import bot
 
 import logging
@@ -31,8 +32,9 @@ async def main():
     try:
         dp = Dispatcher()
         
-        dp.include_router(
+        dp.include_routers(
             start_command.router,
+            payment_callback.router,
         )
         
         await asyncio.gather(
