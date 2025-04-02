@@ -33,6 +33,35 @@ services:
     networks:
       - paymentbot_network
 
+  bot:
+    build: .
+    container_name: bot
+    command: ["python", "bot/tg_bot.py"]
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - TELEGRAM_GROUP_ID=${TELEGRAM_GROUP_ID}
+    depends_on:
+      - db
+    networks:
+      - paymentbot_network
+
+  cron:
+    build: .
+    container_name: cron
+    command: ["cron", "-f", "-L", "15"]
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - paymentbot_network
+
 networks:
   paymentbot_network:
     driver: bridge
