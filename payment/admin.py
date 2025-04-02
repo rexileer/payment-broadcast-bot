@@ -13,6 +13,6 @@ class StartCommandResponseAdmin(admin.ModelAdmin):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'amount', 'status', 'transaction_id')
+    list_display = ('user', 'amount', 'status', 'created_at', 'transaction_id')
     search_fields = ('user__telegram_id', 'transaction_id')
     list_filter = ('status',)
