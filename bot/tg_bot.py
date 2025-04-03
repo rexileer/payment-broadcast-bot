@@ -10,7 +10,7 @@ django.setup()
 
 import asyncio
 from aiogram import Dispatcher
-from commands import start_command, payment_command
+from commands import start_command, payment_command, chat_members_command
 from bot.config import bot
 
 import logging
@@ -34,6 +34,7 @@ async def main():
         dp.include_routers(
             start_command.router,
             payment_command.router,
+            chat_members_command.router,
         )
         
         await asyncio.gather(

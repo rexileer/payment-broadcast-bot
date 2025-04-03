@@ -99,3 +99,6 @@ PROVIDER_TOKEN = os.getenv('PROVIDER_TOKEN')
 TEST_PROVIDER_TOKEN = os.getenv('TEST_PROVIDER_TOKEN')
 CURRENCY = os.getenv('СURRENCY')
 PRICE = os.getenv('PRICE')
+
+API_ID = os.getenv('API_ID')
+API_HASH = os.getenv('API_HASH')
