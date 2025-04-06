@@ -5,7 +5,7 @@ from aiogram.client.session.aiohttp import AiohttpSession
 
 # TELEGRAM
 TOKEN = settings.TELEGRAM_BOT_TOKEN
-GROUP_ID = settings.TELEGRAM_GROUP_ID
+GROUP_IDS = settings.TELEGRAM_GROUP_IDS
 
 # PAYMENT
 PROVIDER_TOKEN = settings.PROVIDER_TOKEN
