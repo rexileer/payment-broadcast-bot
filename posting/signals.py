@@ -5,6 +5,10 @@ from bot.post_sender import send_posting
 
 @receiver(post_save, sender=PostingMessage)
 def send_posting_on_create(sender, instance, created, **kwargs):
+    from django.utils.timezone import now
+    print(f"[{now()}] Signal triggered for PostingMessage. Created: {created}")
     if created:
-        send_posting(instance)
-        pass
+        try:
+            send_posting(instance)
+        except Exception as e:
+            print(f"Ошибка в send_posting: {e}")

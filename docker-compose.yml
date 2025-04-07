@@ -10,6 +10,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - paymentbot_network
+    restart: unless-stopped
 
   web:
     build: .
@@ -19,19 +20,13 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=${DEBUG}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+    env_file:
+      - .env
     depends_on:
       - db
     networks:
       - paymentbot_network
+    restart: unless-stopped
 
   bot:
     build: .
@@ -41,18 +36,16 @@ services:
       - .:/app
     env_file:
       - .env
-    environment:
-      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - TELEGRAM_GROUP_ID=${TELEGRAM_GROUP_ID}
     depends_on:
       - db
     networks:
       - paymentbot_network
+    restart: unless-stopped
 
-  cron:
+  subscription_checker:
     build: .
-    container_name: cron
-    command: ["cron", "-f", "-L", "15"]
+    command: ["python", "run_check_subscriptions.py"]
+    container_name: subscription_checker
     volumes:
       - .:/app
     env_file:
@@ -61,6 +54,8 @@ services:
       - db
     networks:
       - paymentbot_network
+    restart: unless-stopped
+
 
 networks:
   paymentbot_network:

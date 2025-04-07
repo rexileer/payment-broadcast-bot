@@ -6,6 +6,10 @@ from aiogram.fsm.state import State, StatesGroup
 from config import bot
 from payment_config import config
 from bot.services.payment_service import success_payment
+from bot.services.channels_service import get_channel_by_id
+from users.models import Channel
+from asgiref.sync import sync_to_async
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import logging
 logger = logging.getLogger(__name__)
@@ -14,74 +18,117 @@ router = Router()
 
 
 class FSMPrompt(StatesGroup):
+    choosing_channel = State()
     buying = State()
-    
+
+
+@sync_to_async
+def get_active_channels():
+    return list(Channel.objects.filter(is_active=True))
+
+
+def generate_channel_keyboard(channels):
+    buttons = [
+        [InlineKeyboardButton(text=channel.name, callback_data=f"pay_channel_{channel.id}")]
+        for channel in channels
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
 
 @router.message(Command(commands=['pay']))
-async def buy_subscription(message: Message, state: FSMContext):
-    try:
-            # Проверка состояния и его очистка
-            current_state = await state.get_state()
-            if current_state is not None:
-                await state.clear()  # чтобы свободно перейти сюда из любого другого состояния
-            
-            if config.provider_token.split(':')[1] == 'TEST':
-                await message.reply("Для оплаты используйте данные тестовой карты: 1111 1111 1111 1026, 12/22, CVC 000.")
+async def choose_channel_to_pay(message: Message, state: FSMContext):
+    await state.clear()
+    channels = await get_active_channels()
+    if not channels:
+        return await message.reply("Нет доступных каналов для подписки.")
+    
+    await state.set_state(FSMPrompt.choosing_channel)
+    keyboard = generate_channel_keyboard(channels)
+    await message.reply("Выберите канал, за который хотите оплатить:", reply_markup=keyboard)
 
-            prices = [LabeledPrice(label='Оплата заказа', amount=config.price)]
-            await state.set_state(FSMPrompt.buying)
-            await bot.send_invoice(
-                chat_id=message.chat.id,
-                title='Покупка',
-                description='Оплата подписки на 6 месяцев',
-                payload='bot_paid',
-                provider_token=config.provider_token,
-                currency="RUB",
-                prices=prices,
-                # need_phone_number=True,
-                # send_phone_number_to_provider=True,
-                # provider_data=config.provider_data
-            )
+
+@router.callback_query(F.data.startswith("pay_channel_"))
+async def buy_subscription_by_channel(callback, state: FSMContext):
+    try:
+        await callback.answer()
+        channel_id = int(callback.data.split("_")[-1])
+        await state.update_data(channel_id=channel_id)
+
+        if config.provider_token.split(':')[1] == 'TEST':
+            await callback.message.reply("Тестовая карта: 1111 1111 1111 1026, 12/22, CVC 000.")
+
+        prices = [LabeledPrice(label='Оплата подписки на 6 мес.', amount=config.price)]
+        await state.set_state(FSMPrompt.buying)
+        await bot.send_invoice(
+            chat_id=callback.from_user.id,
+            title='Подписка',
+            description='Оплата подписки на 6 месяцев',
+            payload=f'pay_channel_{channel_id}',
+            provider_token=config.provider_token,
+            currency="RUB",
+            prices=prices,
+        )
     except Exception as e:
-        logging.error(
-            f"Ошибка при выполнении команды /pay: {e}\n"
-            f"Данные: {message.chat.id}\n{message.from_user.id}\n"
-            f"{message.from_user.username}\n{config.provider_token}\n{config.currency}\n{config.price}\n{config.provider_data}"
-            )
-        await message.answer("Произошла ошибка при обработке команды!")
-        current_state = await state.get_state()
-        if current_state is not None:
-            await state.clear()
-            
+        logger.error(f"Ошибка при выборе канала для оплаты: {e}")
+        await callback.message.reply("Произошла ошибка при выборе канала!")
+
+
 @router.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery):
     try:
-        await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)  # всегда отвечаем утвердительно
+        await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
     except Exception as e:
-        logging.error(f"Ошибка при обработке апдейта типа PreCheckoutQuery: {e}")
-        
+        logger.error(f"Ошибка при подтверждении оплаты: {e}")
+
 
 @router.message(F.successful_payment)
 async def process_successful_payment(message: Message, state: FSMContext):
     try:
+        data = await state.get_data()
+        channel_id = data.get("channel_id")
         amount = message.successful_payment.total_amount
         status = message.successful_payment.invoice_payload
         transaction_id = message.successful_payment.provider_payment_charge_id
-        await message.reply(f"Платеж на сумму {amount // 100} "
-                            f"{message.successful_payment.currency} прошел успешно!")
-        await success_payment(message.from_user.id, amount, status, transaction_id)
-        logging.info(f"Получен платеж от {message.from_user.id}")
-    except Exception as e:
-        logging.error(f"Ошибка при обработке сообщения об успешном платеже: {e}")
-        await message.reply("Произошла ошибка при обработке платежа!")
-    current_state = await state.get_state()
-    if current_state is not None:
-        await state.clear()  # чтобы свободно перейти сюда из любого другого состояния
 
-            
+        await message.reply(f"Оплата прошла успешно! Канал ID: {channel_id}")
+
+        # Обновляем подписку
+        await success_payment(
+            telegram_id=message.from_user.id,
+            amount=amount,
+            status=status,
+            transaction_id=transaction_id,
+            channel_id=channel_id,
+        )
+
+        logger.info(f"Платёж успешен: {message.from_user.id} за канал {channel_id}")
+        # Получаем Telegram ID канала
+        channel = await sync_to_async(get_channel_by_id)(channel_id)
+        telegram_channel_id = str(channel.channel_id)
+
+        # Разбан пользователя
+        try:
+            await bot.unban_chat_member(telegram_channel_id, message.from_user.id)
+            logger.info(f"Разбанили пользователя {message.from_user.id} в канале {telegram_channel_id} после оплаты")
+        except Exception as e:
+            logger.error(f"Ошибка при разбане пользователя {message.from_user.id} в канале {telegram_channel_id}: {e}")
+
+        await message.reply(f"Подписка на канал {channel.name} успешно активирована! Вы можете пользоваться каналом.")
+        try:
+            channel_link = await bot.create_chat_invite_link(telegram_channel_id)
+            await message.reply(f"Ссылка на канал: {channel_link.invite_link}")
+        except Exception as e:
+            logger.error(f"Ошибка при создании ссылки на канал {telegram_channel_id}: {e}")
+            await message.reply("Не удалось создать ссылку на канал. Пожалуйста, свяжитесь с администратором.")
+        
+    except Exception as e:
+        logger.error(f"Ошибка при обработке успешного платежа: {e}")
+        await message.reply("Произошла ошибка при обработке платежа!")
+    finally:
+        await state.clear()
+
+
 @router.message(FSMPrompt.buying)
 async def process_unsuccessful_payment(message: Message, state: FSMContext):
-        await message.reply("Не удалось выполнить платеж!")
-        current_state = await state.get_state()
-        if current_state is not None:
-            await state.clear()  # чтобы свободно перейти сюда из любого другого состояния
+    await message.reply("Платеж не был завершён.")
+    await state.clear()

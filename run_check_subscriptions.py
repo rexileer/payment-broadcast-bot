@@ -16,8 +16,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+CHECK_INTERVAL_SECONDS = 5 * 60  # 5 минут
+
 async def main():
-    await check_subscriptions(logger=logger)
+    while True:
+        try:
+            logger.info("Запуск проверки подписок...")
+            await check_subscriptions(logger=logger)
+            logger.info("Проверка подписок завершена.")
+        except Exception as e:
+            logger.error(f"Ошибка в процессе проверки подписок: {e}")
+        await asyncio.sleep(CHECK_INTERVAL_SECONDS)
 
 if __name__ == "__main__":
     asyncio.run(main())

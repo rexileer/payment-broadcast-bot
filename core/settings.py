@@ -60,7 +60,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DB', 'default_db_name'),
         'USER': os.getenv('POSTGRES_USER', 'default_user'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'default_password'),
-        'HOST': 'localhost',
+        'HOST': os.getenv('POSTGRES_HOST', 'db'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
@@ -92,7 +92,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_TOKEN')
-TELEGRAM_GROUP_IDS = os.getenv('TELEGRAM_GROUP_IDS')
 
 #YOOKASSA
 PROVIDER_TOKEN = os.getenv('PROVIDER_TOKEN')

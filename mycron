@@ -1,1 +1,0 @@
-0 18 * * * /usr/local/bin/python3 /app/run_check_subscriptions.py >> /var/log/cron.log 2>&1
