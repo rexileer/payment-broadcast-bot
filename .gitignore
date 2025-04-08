@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /media
 bot/s1.session
+s1.session
