@@ -34,7 +34,7 @@ async def main():
         dp.include_routers(
             start_command.router,
             payment_command.router,
-            chat_members_command.router,
+            # chat_members_command.router,
         )
         
         await asyncio.gather(
