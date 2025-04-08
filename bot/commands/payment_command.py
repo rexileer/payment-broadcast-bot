@@ -27,24 +27,24 @@ def get_active_channels():
     return list(Channel.objects.filter(is_active=True))
 
 
-def generate_channel_keyboard(channels):
-    buttons = [
-        [InlineKeyboardButton(text=channel.name, callback_data=f"pay_channel_{channel.id}")]
-        for channel in channels
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+# def generate_channel_keyboard(channels):
+#     buttons = [
+#         [InlineKeyboardButton(text=channel.name, callback_data=f"pay_channel_{channel.id}")]
+#         for channel in channels
+#     ]
+#     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-@router.message(Command(commands=['pay']))
-async def choose_channel_to_pay(message: Message, state: FSMContext):
-    await state.clear()
-    channels = await get_active_channels()
-    if not channels:
-        return await message.reply("Нет доступных каналов для подписки.")
+# @router.message(Command(commands=['pay']))
+# async def choose_channel_to_pay(message: Message, state: FSMContext):
+#     await state.clear()
+#     channels = await get_active_channels()
+#     if not channels:
+#         return await message.reply("Нет доступных каналов для подписки.")
     
-    await state.set_state(FSMPrompt.choosing_channel)
-    keyboard = generate_channel_keyboard(channels)
-    await message.reply("Выберите канал, за который хотите оплатить:", reply_markup=keyboard)
+#     await state.set_state(FSMPrompt.choosing_channel)
+#     keyboard = generate_channel_keyboard(channels)
+#     await message.reply("Выберите канал, за который хотите оплатить:", reply_markup=keyboard)
 
 
 @router.callback_query(F.data.startswith("pay_channel_"))
@@ -90,7 +90,7 @@ async def process_successful_payment(message: Message, state: FSMContext):
         status = message.successful_payment.invoice_payload
         transaction_id = message.successful_payment.provider_payment_charge_id
 
-        await message.reply(f"Оплата прошла успешно! Канал ID: {channel_id}")
+        await message.reply(f"Оплата прошла успешно!")
 
         # Обновляем подписку
         await success_payment(
@@ -103,7 +103,7 @@ async def process_successful_payment(message: Message, state: FSMContext):
 
         logger.info(f"Платёж успешен: {message.from_user.id} за канал {channel_id}")
         # Получаем Telegram ID канала
-        channel = await sync_to_async(get_channel_by_id)(channel_id)
+        channel = await get_channel_by_id(channel_id)
         telegram_channel_id = str(channel.channel_id)
 
         # Разбан пользователя

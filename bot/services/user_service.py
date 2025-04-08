@@ -16,6 +16,11 @@ def get_user(telegram_id):
     except User.DoesNotExist:
         return None
 
+@sync_to_async
+def get_user_subscriptions(telegram_id):
+    """Получает все подписки пользователя"""
+    user = User.objects.get(telegram_id=telegram_id)
+    return list(UserChannelSubscription.objects.select_related('channel').filter(user=user))
 
 @sync_to_async
 def add_user(telegram_id):

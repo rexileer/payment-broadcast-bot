@@ -1,8 +1,8 @@
 from django.utils.timezone import now, timedelta
 from bot.config import bot
-from bot.services.payment_message_service import get_payment_message, send_message_with_fallback
+from bot.services.payment_message_service import send_message_with_fallback
 from bot.services.channels_service import get_all_channels, get_channel_subscriptions
-from bot.keyboards.reply.to_payment_kb import send_payment_kb
+from bot.services.payment_notification import send_payment_notification
 from asgiref.sync import sync_to_async
 
 import logging
@@ -45,16 +45,15 @@ async def check_subscriptions(logger=logger):
 
                 elif subscription.is_paid:
                     try:
-                        message = await get_payment_message()
-                        keyboard = send_payment_kb()
-                        await bot.send_message(
-                            telegram_id,
-                            f"{message}\n\nДля канала: {channel.name}",
-                            reply_markup=keyboard
-                        )
+                        # Отправляем уведомление с кнопкой "Оплатить"
+                        await send_payment_notification(telegram_id, subscription)
+
+                        # Обновляем статус подписки
                         subscription.is_paid = False
                         await sync_to_async(subscription.save)()
+
                         logger.info(f"Оповестили пользователя {telegram_id} о платеже за канал {channel.name}")
+
                     except Exception as e:
                         logger.error(f"Ошибка при уведомлении {telegram_id} за канал {channel.name}: {e}. Вероятно, пользователь не подписан на бота")
 
