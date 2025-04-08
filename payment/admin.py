@@ -4,7 +4,7 @@ from .models import PaymentMessage, Payment
 admin.site.site_header = "Редактирование"
 
 @admin.register(PaymentMessage)
-class StartCommandResponseAdmin(admin.ModelAdmin):
+class PaymentMessageAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return not PaymentMessage.objects.exists()  # Разрешаем добавлять, только если нет записей
 

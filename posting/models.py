@@ -36,3 +36,18 @@ class StartCommandResponse(models.Model):
     class Meta:
         verbose_name = 'Приветственное сообщение'
         verbose_name_plural = 'Приветственное сообщение'
+
+class FallbackNotificationMessage(models.Model):
+    text = models.TextField()
+
+    def save(self, *args, **kwargs):
+        if FallbackNotificationMessage.objects.exists():
+            self.pk = FallbackNotificationMessage.objects.first().pk
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "Текст для fallback-уведомления"
+
+    class Meta:
+        verbose_name = 'Fallback-уведомление'
+        verbose_name_plural = 'Fallback-уведомление'

@@ -1,6 +1,6 @@
 from django.utils.timezone import now, timedelta
 from bot.config import bot
-from bot.services.payment_message_service import get_payment_message
+from bot.services.payment_message_service import get_payment_message, send_message_with_fallback
 from bot.services.channels_service import get_all_channels, get_channel_subscriptions
 from bot.keyboards.reply.to_payment_kb import send_payment_kb
 from asgiref.sync import sync_to_async
@@ -44,7 +44,6 @@ async def check_subscriptions(logger=logger):
                         logger.error(f"Ошибка при бане {telegram_id} в канале {channel.name}: {e}")
 
                 elif subscription.is_paid:
-                    # Отправляем напоминание, если ещё не забанен
                     try:
                         message = await get_payment_message()
                         keyboard = send_payment_kb()
@@ -58,13 +57,23 @@ async def check_subscriptions(logger=logger):
                         logger.info(f"Оповестили пользователя {telegram_id} о платеже за канал {channel.name}")
                     except Exception as e:
                         logger.error(f"Ошибка при уведомлении {telegram_id} за канал {channel.name}: {e}. Вероятно, пользователь не подписан на бота")
-                        # Баним, так как не смогли отправить уведомление
+
+                        # Пробуем fallback-уведомление
                         try:
-                            await bot.ban_chat_member(group_id, telegram_id)
-                            # await bot.unban_chat_member(group_id, telegram_id)
-                            subscription.banned = True
+                            await send_message_with_fallback(telegram_id, f"Уведомление о платеже за канал: {channel.name}")
                             subscription.is_paid = False
                             await sync_to_async(subscription.save)()
-                            logger.info(f"Забанили пользователя {telegram_id} за неуплату в канале {channel.name}")
-                        except Exception as e:
-                            logger.error(f"Ошибка при бане {telegram_id} в канале {channel.name}: {e}")
+                            logger.info(f"Fallback-сообщение отправлено, is_paid установлен в False для {telegram_id}")                      
+                        except Exception as fallback_error:
+                            logger.error(f"Ошибка при отправке fallback-сообщения {telegram_id} в канале {channel.name}: {fallback_error}")
+
+                            # Баним, если fallback тоже не прошёл
+                            try:
+                                await bot.ban_chat_member(group_id, telegram_id)
+                                # await bot.unban_chat_member(group_id, telegram_id)
+                                subscription.banned = True
+                                subscription.is_paid = False
+                                await sync_to_async(subscription.save)()
+                                logger.info(f"Забанили пользователя {telegram_id} за неуплату в канале {channel.name}")
+                            except Exception as ban_error:
+                                logger.error(f"Ошибка при бане {telegram_id} в канале {channel.name}: {ban_error}")

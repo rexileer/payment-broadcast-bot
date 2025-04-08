@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PostingMessage, StartCommandResponse
+from .models import PostingMessage, StartCommandResponse, FallbackNotificationMessage
 from django.utils.html import format_html
 from django.forms import FileInput
 from django.db import models
@@ -13,6 +13,13 @@ class StartCommandResponseAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False  # Запрещаем удаление
 
+@admin.register(FallbackNotificationMessage)
+class FallbackNotificationMessageAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return not FallbackNotificationMessage.objects.exists()  # Разрешаем добавлять, только если нет записей
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # Запрещаем удаление
 
 
 @admin.register(PostingMessage)
