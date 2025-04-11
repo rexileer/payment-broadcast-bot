@@ -8,9 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def get_payment_message():
+async def get_payment_message(channel) -> str:
     msg = await PaymentMessage.objects.afirst()
-    return msg.text if msg else "Пожалуйста, оплатите подписку для доступа к группе.\n Для этого введите команду /pay"
+    return msg.text if msg else f"Ваша подписка на канал {channel.name} истекла. Пожалуйста, оплатите подписку для продолжения."
 
 
 async def send_message_with_fallback(user_id: int, text: str):
