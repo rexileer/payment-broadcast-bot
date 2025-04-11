@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PaymentMessage, Payment
+from .models import PaymentMessage, Payment, PaymentItem
 
 admin.site.site_header = "Редактирование"
 
@@ -16,3 +16,11 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = ('user', 'amount', 'status', 'created_at', 'transaction_id')
     search_fields = ('user__telegram_id', 'transaction_id')
     list_filter = ('status',)
+    
+@admin.register(PaymentItem)
+class PaymentItemAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return not PaymentItem.objects.exists()  # Разрешаем добавлять, только если нет записей
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # Запрещаем удаление

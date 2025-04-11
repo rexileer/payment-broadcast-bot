@@ -8,6 +8,7 @@ from payment_config import config
 from bot.services.payment_service import success_payment
 from bot.services.channels_service import get_channel_by_id
 from users.models import Channel
+from payment.models import PaymentItem
 from asgiref.sync import sync_to_async
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -59,10 +60,19 @@ async def buy_subscription_by_channel(callback, state: FSMContext):
 
         prices = [LabeledPrice(label='Оплата подписки на 6 мес.', amount=config.price)]
         await state.set_state(FSMPrompt.buying)
+        
+        try:
+            title = await PaymentItem.objects.afirst().title
+            description = await PaymentItem.objects.afirst().description
+        except Exception as e:
+            logger.error(f"Error getting payment item: {e}")
+            title = "Подписка"
+            description = "Оплата подписки на 6 месяцев"
+        
         await bot.send_invoice(
             chat_id=callback.from_user.id,
-            title='Подписка',
-            description='Оплата подписки на 6 месяцев',
+            title=title,
+            description=description,
             payload=f'pay_channel_{channel_id}',
             provider_token=config.provider_token,
             currency="RUB",

@@ -35,3 +35,20 @@ class PaymentMessage(models.Model):
     class Meta:
         verbose_name = 'Платежное сообщение'
         verbose_name_plural = 'Платежное сообщение'
+
+class PaymentItem(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField(max_length=1000)
+
+    def save(self, *args, **kwargs):
+        if PaymentMessage.objects.exists():
+            # Разрешаем обновлять только первую запись
+            self.pk = PaymentMessage.objects.first().pk
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return "Редактирование продукта"
+    
+    class Meta:
+        verbose_name = 'Продукт'
+        verbose_name_plural = 'Продукт'
