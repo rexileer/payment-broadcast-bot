@@ -1,6 +1,5 @@
 from aiogram import Router, F
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from config import bot
@@ -10,7 +9,6 @@ from bot.services.channels_service import get_channel_by_id
 from users.models import Channel
 from payment.models import PaymentItem
 from asgiref.sync import sync_to_async
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import logging
 logger = logging.getLogger(__name__)
@@ -28,26 +26,6 @@ def get_active_channels():
     return list(Channel.objects.filter(is_active=True))
 
 
-# def generate_channel_keyboard(channels):
-#     buttons = [
-#         [InlineKeyboardButton(text=channel.name, callback_data=f"pay_channel_{channel.id}")]
-#         for channel in channels
-#     ]
-#     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-# @router.message(Command(commands=['pay']))
-# async def choose_channel_to_pay(message: Message, state: FSMContext):
-#     await state.clear()
-#     channels = await get_active_channels()
-#     if not channels:
-#         return await message.reply("Нет доступных каналов для подписки.")
-    
-#     await state.set_state(FSMPrompt.choosing_channel)
-#     keyboard = generate_channel_keyboard(channels)
-#     await message.reply("Выберите канал, за который хотите оплатить:", reply_markup=keyboard)
-
-
 @router.callback_query(F.data.startswith("pay_channel_"))
 async def buy_subscription_by_channel(callback, state: FSMContext):
     try:
@@ -62,8 +40,13 @@ async def buy_subscription_by_channel(callback, state: FSMContext):
         await state.set_state(FSMPrompt.buying)
         
         try:
-            title = await PaymentItem.objects.afirst().title
-            description = await PaymentItem.objects.afirst().description
+            item = await PaymentItem.objects.afirst()
+            if item:
+                title = item.title
+                description = item.description
+            else:
+                title = "Подписка"
+                description = "Оплата подписки на 6 месяцев"
         except Exception as e:
             logger.error(f"Error getting payment item: {e}")
             title = "Подписка"
