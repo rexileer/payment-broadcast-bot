@@ -46,7 +46,8 @@ async def get_chat_members(chat_id):
 
         async for member in app.get_chat_members(chat_id):
             user_id = member.user.id
-            user, _ = await User.objects.aupdate_or_create(telegram_id=user_id)
+            user_name = member.user.username or f"{member.user.first_name} {member.user.last_name or ''}".strip()
+            user, _ = await User.objects.aupdate_or_create(telegram_id=user_id, name=user_name)
 
             # Проверяем, есть ли уже подписка
             exists = await UserChannelSubscription.objects.filter(user=user, channel=channel).aexists()

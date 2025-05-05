@@ -4,7 +4,11 @@ from datetime import timedelta
 
 class User(models.Model):
     telegram_id = models.BigIntegerField(unique=True)
+    name = models.CharField(default="", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
     
     class Meta:
         verbose_name = 'Пользователь telegram'
@@ -13,7 +17,7 @@ class User(models.Model):
 class Channel(models.Model):
     name = models.CharField(max_length=255, default="")
     channel_id = models.BigIntegerField(unique=True)
-    link = models.URLField()
+    link = models.URLField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -40,4 +44,4 @@ class UserChannelSubscription(models.Model):
         verbose_name_plural = 'Подписки'
 
     def __str__(self):
-        return f"{self.user.telegram_id} -> {self.channel.name}"
+        return f"{self.user.name} -> {self.channel.name}"

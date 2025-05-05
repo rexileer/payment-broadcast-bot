@@ -4,7 +4,7 @@ from .models import User, Channel, UserChannelSubscription
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('telegram_id', 'created_at')
+    list_display = ('telegram_id', 'name', 'created_at')
     search_fields = ('telegram_id',)
 
 

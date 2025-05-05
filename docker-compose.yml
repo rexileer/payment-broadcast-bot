@@ -1,20 +1,21 @@
 services:
   db:
     image: postgres:13
-    container_name: db
+    container_name: ${CONTAINER_NAME}_db
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - paymentbot_network
+      - network_name
     restart: unless-stopped
 
   web:
     build: .
-    container_name: web
+    container_name: ${CONTAINER_NAME}_web
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - .:/app
@@ -25,12 +26,12 @@ services:
     depends_on:
       - db
     networks:
-      - paymentbot_network
+      - network_name
     restart: unless-stopped
 
   bot:
     build: .
-    container_name: bot
+    container_name: ${CONTAINER_NAME}_bot
     command: ["python", "bot/tg_bot.py"]
     volumes:
       - .:/app
@@ -39,13 +40,13 @@ services:
     depends_on:
       - db
     networks:
-      - paymentbot_network
+      - network_name
     restart: unless-stopped
 
   subscription_checker:
     build: .
     command: ["python", "run_check_subscriptions.py"]
-    container_name: subscription_checker
+    container_name: ${CONTAINER_NAME}_subscription_checker
     volumes:
       - .:/app
     env_file:
@@ -53,13 +54,14 @@ services:
     depends_on:
       - db
     networks:
-      - paymentbot_network
+      - network_name
     restart: unless-stopped
 
 
 networks:
-  paymentbot_network:
-    driver: bridge
+  network_name:
+    external: false
+    name: ${NETWORK_NAME}
 
 volumes:
   postgres_data:
