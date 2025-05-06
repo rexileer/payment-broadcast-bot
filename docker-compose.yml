@@ -34,7 +34,7 @@ services:
       - network_name
     restart: unless-stopped
     cpus: 0.25
-    mem_limit: 256m
+    mem_limit: 512m
 
   bot:
     build: .
