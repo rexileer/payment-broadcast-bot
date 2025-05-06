@@ -14,7 +14,8 @@ router = Router()
 async def start(message: Message):
     logger.info(f"Received /start command from {message.from_user.id}")
     try:
-        await add_user(message.from_user.id)
+        name = message.from_user.username or ""
+        await add_user(message.from_user.id, name)
     except Exception as e:
         logger.error(f"Error adding user: {e}")
     try:
