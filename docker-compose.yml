@@ -14,11 +14,13 @@ services:
     restart: unless-stopped
     cpus: 0.3
     mem_limit: 256m
-    
+
   web:
     build: .
     container_name: ${CONTAINER_NAME}_web
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:
@@ -32,7 +34,7 @@ services:
     restart: unless-stopped
     cpus: 0.3
     mem_limit: 256m
-          
+
   bot:
     build: .
     container_name: ${CONTAINER_NAME}_bot
@@ -51,8 +53,8 @@ services:
 
   subscription_checker:
     build: .
-    command: ["python", "run_check_subscriptions.py"]
     container_name: ${CONTAINER_NAME}_subscription_checker
+    command: ["python", "run_check_subscriptions.py"]
     volumes:
       - .:/app
     env_file:
@@ -64,7 +66,6 @@ services:
     restart: unless-stopped
     cpus: 0.3
     mem_limit: 256m
-
 
 networks:
   network_name:
