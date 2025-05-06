@@ -12,7 +12,9 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-
+    cpus: 0.3
+    mem_limit: 256m
+    
   web:
     build: .
     container_name: ${CONTAINER_NAME}_web
@@ -28,7 +30,9 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-
+    cpus: 0.3
+    mem_limit: 256m
+          
   bot:
     build: .
     container_name: ${CONTAINER_NAME}_bot
@@ -42,6 +46,8 @@ services:
     networks:
       - network_name
     restart: unless-stopped
+    cpus: 0.3
+    mem_limit: 256m
 
   subscription_checker:
     build: .
@@ -56,6 +62,8 @@ services:
     networks:
       - network_name
     restart: unless-stopped
+    cpus: 0.3
+    mem_limit: 256m
 
 
 networks:
