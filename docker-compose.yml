@@ -12,7 +12,7 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-    cpus: 0.3
+    cpus: 0.2
     mem_limit: 256m
 
   web:
@@ -32,7 +32,7 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-    cpus: 0.3
+    cpus: 0.25
     mem_limit: 256m
 
   bot:
@@ -64,7 +64,7 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-    cpus: 0.3
+    cpus: 0.2
     mem_limit: 256m
 
 networks:
