@@ -21,7 +21,7 @@ async def send_message_with_fallback(user_id: int, text: str):
         logger.warning("Нет fallback-сообщения в базе")
         fallback_msg = FallbackNotificationMessage(text="Пожалуйста, оплатите подписку через бота для доступа к группе.")
 
-    async with Client("bot/s1", API_ID, API_HASH) as app:
+    async with Client("bot/s1_bot", API_ID, API_HASH) as app:
         try:
             await app.send_message(chat_id=user_id, text=fallback_msg.text)
             logger.info(f"Fallback-сообщение отправлено через юзербота {user_id}")

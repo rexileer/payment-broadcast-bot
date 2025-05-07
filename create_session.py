@@ -7,7 +7,7 @@ load_dotenv(encoding='utf-8')
 API_ID = os.getenv('API_ID')
 API_HASH = os.getenv('API_HASH')
 
-session_path = "bot/s1" 
+session_path = "bot/s1_bot" 
 
 app = Client(session_path, api_id=API_ID, api_hash=API_HASH)
 
