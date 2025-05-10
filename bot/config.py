@@ -46,15 +46,26 @@ class BotManager:
     async def get_userbot(self):
         async with self._lock:
             if self._userbot is None:
-                try:
-                    # Используем абсолютный путь для сессии
-                    session_path = os.path.join(os.getcwd(), "bot", "s1_bot")
-                    self._userbot = Client(session_path, API_ID, API_HASH)
-                    await self._userbot.start()
-                    logger.info("✅ Userbot успешно инициализирован")
-                except Exception as e:
-                    logger.error(f"❌ Ошибка инициализации юзербота: {e}")
-                    raise
+                max_retries = 3
+                retry_delay = 5
+                
+                for attempt in range(max_retries):
+                    try:
+                        # Используем абсолютный путь для сессии
+                        session_path = os.path.join(os.getcwd(), "bot", "s1_bot")
+                        self._userbot = Client(session_path, API_ID, API_HASH)
+                        await self._userbot.start()
+                        logger.info("✅ Userbot успешно инициализирован")
+                        return self._userbot
+                    except Exception as e:
+                        if "database is locked" in str(e):
+                            if attempt < max_retries - 1:
+                                logger.warning(f"База данных заблокирована, попытка {attempt + 1}/{max_retries}. Ожидание {retry_delay} секунд...")
+                                await asyncio.sleep(retry_delay)
+                                retry_delay *= 2  # Увеличиваем задержку с каждой попыткой
+                                continue
+                        logger.error(f"❌ Ошибка инициализации юзербота: {e}")
+                        raise
             return self._userbot
 
     async def close(self):

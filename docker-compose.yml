@@ -41,7 +41,7 @@ services:
     container_name: ${CONTAINER_NAME}_bot
     command: >
       sh -c "python bot/tg_bot.py & 
-             sleep 15 && 
+             sleep 40 && 
              python run_check_subscriptions.py"
     volumes:
       - .:/app
