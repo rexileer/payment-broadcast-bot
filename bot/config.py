@@ -5,6 +5,8 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from pyrogram import Client
 import logging
 import os
+import asyncio
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,9 @@ class BotManager:
     _bot = None
     _userbot = None
     _session = None
+    _lock = asyncio.Lock()
+    _last_close_time = 0
+    _close_cooldown = 30  # секунды между закрытиями
 
     def __new__(cls):
         if cls._instance is None:
@@ -39,23 +44,34 @@ class BotManager:
         return self._bot
 
     async def get_userbot(self):
-        if self._userbot is None:
-            try:
-                # Используем абсолютный путь для сессии
-                session_path = os.path.join(os.getcwd(), "bot", "s1_bot")
-                self._userbot = Client(session_path, API_ID, API_HASH)
-                await self._userbot.start()
-                logger.info("✅ Userbot успешно инициализирован")
-            except Exception as e:
-                logger.error(f"❌ Ошибка инициализации юзербота: {e}")
-                raise
-        return self._userbot
+        async with self._lock:
+            if self._userbot is None:
+                try:
+                    # Используем абсолютный путь для сессии
+                    session_path = os.path.join(os.getcwd(), "bot", "s1_bot")
+                    self._userbot = Client(session_path, API_ID, API_HASH)
+                    await self._userbot.start()
+                    logger.info("✅ Userbot успешно инициализирован")
+                except Exception as e:
+                    logger.error(f"❌ Ошибка инициализации юзербота: {e}")
+                    raise
+            return self._userbot
 
     async def close(self):
-        if self._bot:
-            await self._bot.close()
-        if self._userbot:
-            await self._userbot.stop()
+        current_time = time.time()
+        if current_time - self._last_close_time < self._close_cooldown:
+            logger.warning("Пропускаем закрытие ботов из-за cooldown")
+            return
+
+        try:
+            if self._bot:
+                await self._bot.close()
+            if self._userbot:
+                await self._userbot.stop()
+            self._last_close_time = current_time
+            logger.info("✅ Боты успешно закрыты")
+        except Exception as e:
+            logger.error(f"❌ Ошибка при закрытии ботов: {e}")
 
 # Create singleton instance
 bot_manager = BotManager()

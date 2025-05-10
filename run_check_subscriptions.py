@@ -24,6 +24,8 @@ last_check_time = None
 async def init_bots():
     """Инициализация ботов при старте"""
     try:
+        # Ждем 5 секунд перед инициализацией
+        await asyncio.sleep(10)
         # Инициализируем юзербота заранее
         await bot_manager.get_userbot()
         logger.info("✅ Боты успешно инициализированы")
