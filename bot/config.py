@@ -31,6 +31,10 @@ class BotManager:
     _lock = asyncio.Lock()
     _last_close_time = 0
     _close_cooldown = 30  # секунды между закрытиями
+    _session_files = {
+        'main': 's1_bot',
+        'checker': 's1'
+    }
 
     def __new__(cls):
         if cls._instance is None:
@@ -43,29 +47,23 @@ class BotManager:
     def bot(self):
         return self._bot
 
-    async def get_userbot(self):
+    async def get_userbot(self, session_type='main'):
         async with self._lock:
             if self._userbot is None:
-                max_retries = 3
-                retry_delay = 5
-                
-                for attempt in range(max_retries):
-                    try:
-                        # Используем абсолютный путь для сессии
-                        session_path = os.path.join(os.getcwd(), "bot", "s1_bot")
-                        self._userbot = Client(session_path, API_ID, API_HASH)
-                        await self._userbot.start()
-                        logger.info("✅ Userbot успешно инициализирован")
-                        return self._userbot
-                    except Exception as e:
-                        if "database is locked" in str(e):
-                            if attempt < max_retries - 1:
-                                logger.warning(f"База данных заблокирована, попытка {attempt + 1}/{max_retries}. Ожидание {retry_delay} секунд...")
-                                await asyncio.sleep(retry_delay)
-                                retry_delay *= 2  # Увеличиваем задержку с каждой попыткой
-                                continue
-                        logger.error(f"❌ Ошибка инициализации юзербота: {e}")
-                        raise
+                try:
+                    # Используем разные файлы сессии для разных скриптов
+                    session_name = self._session_files.get(session_type, 's1_bot')
+                    session_path = os.path.join(os.getcwd(), "bot", session_name)
+                    
+                    # Создаем директорию для сессии, если её нет
+                    os.makedirs(os.path.dirname(session_path), exist_ok=True)
+                    
+                    self._userbot = Client(session_path, API_ID, API_HASH)
+                    await self._userbot.start()
+                    logger.info(f"✅ Userbot успешно инициализирован (сессия: {session_name})")
+                except Exception as e:
+                    logger.error(f"❌ Ошибка инициализации юзербота: {e}")
+                    raise
             return self._userbot
 
     async def close(self):
