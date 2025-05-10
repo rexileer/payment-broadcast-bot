@@ -13,7 +13,7 @@ services:
       - network_name
     restart: unless-stopped
     cpus: 0.2
-    mem_limit: 256m
+    mem_limit: 128m
 
   web:
     build: .
@@ -39,7 +39,10 @@ services:
   bot:
     build: .
     container_name: ${CONTAINER_NAME}_bot
-    command: ["python", "bot/tg_bot.py"]
+    command: >
+      sh -c "python bot/tg_bot.py & 
+             sleep 15 && 
+             python run_check_subscriptions.py"
     volumes:
       - .:/app
     env_file:
@@ -49,24 +52,7 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-    cpus: 0.3
-    mem_limit: 256m
-
-  subscription_checker:
-    build: .
-    container_name: ${CONTAINER_NAME}_subscription_checker
-    command: ["python", "run_check_subscriptions.py"]
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    depends_on:
-      - db
-    networks:
-      - network_name
-    restart: unless-stopped
-    cpus: 0.2
-    mem_limit: 256m
+    cpus: 0.4
 
 networks:
   network_name:

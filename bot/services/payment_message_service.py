@@ -1,7 +1,6 @@
 from payment.models import PaymentMessage
 from aiogram.exceptions import TelegramForbiddenError
-from pyrogram import Client
-from bot.config import API_ID, API_HASH, bot
+from bot.config import bot_manager
 from posting.models import FallbackNotificationMessage
 import logging
 
@@ -21,9 +20,9 @@ async def send_message_with_fallback(user_id: int, text: str):
         logger.warning("Нет fallback-сообщения в базе")
         fallback_msg = FallbackNotificationMessage(text="Пожалуйста, оплатите подписку через бота для доступа к группе.")
 
-    async with Client("bot/s1_bot", API_ID, API_HASH) as app:
-        try:
-            await app.send_message(chat_id=user_id, text=fallback_msg.text)
-            logger.info(f"Fallback-сообщение отправлено через юзербота {user_id}")
-        except Exception as e:
-            logger.error(f"Ошибка при отправке fallback-сообщения через юзербота {user_id}: {e}")
+    try:
+        userbot = await bot_manager.get_userbot()
+        await userbot.send_message(chat_id=user_id, text=fallback_msg.text)
+        logger.info(f"Fallback-сообщение отправлено через юзербота {user_id}")
+    except Exception as e:
+        logger.error(f"Ошибка при отправке fallback-сообщения через юзербота {user_id}: {e}")

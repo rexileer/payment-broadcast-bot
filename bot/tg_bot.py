@@ -11,7 +11,7 @@ django.setup()
 import asyncio
 from aiogram import Dispatcher
 from commands import start_command, payment_command, chat_members_command
-from bot.config import bot
+from bot.config import bot_manager, bot
 
 import logging
 
@@ -26,9 +26,21 @@ logging.basicConfig(
 
 logger = logging.getLogger("TelegramBot")
 
+async def init_bots():
+    """Инициализация ботов при старте"""
+    try:
+        # Инициализируем юзербота заранее
+        await bot_manager.get_userbot()
+        logger.info("✅ Боты успешно инициализированы")
+    except Exception as e:
+        logger.error(f"❌ Ошибка инициализации ботов: {e}")
+        raise
 
 async def main():
     try:
+        # Инициализируем ботов перед стартом
+        await init_bots()
+        
         dp = Dispatcher()
         
         dp.include_routers(
@@ -45,7 +57,7 @@ async def main():
     except Exception as e:
         logger.error(f"Error: {e}")
     finally:
-        await bot.close()
+        await bot_manager.close()
 
 if __name__ == "__main__":
     asyncio.run(main())

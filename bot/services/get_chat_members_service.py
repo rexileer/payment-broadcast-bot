@@ -1,9 +1,8 @@
-from pyrogram import Client, utils
-from bot.config import API_HASH, API_ID
+from pyrogram import utils
+from bot.config import bot_manager
 from users.models import User, Channel, UserChannelSubscription
 from django.utils.timezone import now
 from datetime import timedelta
-import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,15 +19,12 @@ def get_peer_type_new(peer_id: int) -> str:
 # Переопределяем Pyrogram функцию
 utils.get_peer_type = get_peer_type_new
 
-session_path = os.path.abspath("bot/s1")  # или абсолютный путь, типа "/home/user/project/bot/s1"
-
 async def get_chat_members(chat_id):
-    api_id = API_ID
-    api_hash = API_HASH
     added_users = 0
     updated_subs = 0
 
-    async with Client(session_path, api_id, api_hash) as app:
+    try:
+        app = await bot_manager.get_userbot()
         logger.info(f"Проверка доступа к чату: {chat_id}")
         chat = await app.get_chat(int(chat_id))
 
@@ -41,8 +37,6 @@ async def get_chat_members(chat_id):
                 "is_active": True
             }
         )
-
-        # await app.send_message(chat_id, "Проверка доступа")
 
         async for member in app.get_chat_members(chat_id):
             user_id = member.user.id
@@ -62,5 +56,8 @@ async def get_chat_members(chat_id):
                 )
                 added_users += 1
 
-    logger.info(f"Добавлено пользователей: {added_users}, обновлено подписок: {updated_subs}")
-    return added_users, updated_subs
+        logger.info(f"Добавлено пользователей: {added_users}, обновлено подписок: {updated_subs}")
+        return added_users, updated_subs
+    except Exception as e:
+        logger.error(f"Ошибка при получении участников чата {chat_id}: {e}")
+        raise

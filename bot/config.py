@@ -2,6 +2,10 @@ from django.conf import settings
 from aiogram import Bot
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
+from pyrogram import Client
+import logging
+
+logger = logging.getLogger(__name__)
 
 # TELEGRAM
 TOKEN = settings.TELEGRAM_BOT_TOKEN
@@ -16,6 +20,39 @@ PRICE = settings.PRICE
 API_HASH = settings.API_HASH
 API_ID = settings.API_ID
 
-# SESSION BOT
-session = AiohttpSession()
-bot = Bot(token=TOKEN, session=session, default=DefaultBotProperties(parse_mode='HTML'))
+class BotManager:
+    _instance = None
+    _bot = None
+    _userbot = None
+    _session = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(BotManager, cls).__new__(cls)
+            cls._session = AiohttpSession()
+            cls._bot = Bot(token=TOKEN, session=cls._session, default=DefaultBotProperties(parse_mode='HTML'))
+        return cls._instance
+
+    @property
+    def bot(self):
+        return self._bot
+
+    async def get_userbot(self):
+        if self._userbot is None:
+            try:
+                self._userbot = Client("bot/s1_bot", API_ID, API_HASH)
+                await self._userbot.start()
+            except Exception as e:
+                logger.error(f"Error initializing userbot: {e}")
+                raise
+        return self._userbot
+
+    async def close(self):
+        if self._bot:
+            await self._bot.close()
+        if self._userbot:
+            await self._userbot.stop()
+
+# Create singleton instance
+bot_manager = BotManager()
+bot = bot_manager.bot
