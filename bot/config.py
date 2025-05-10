@@ -4,6 +4,7 @@ from aiogram.client.bot import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from pyrogram import Client
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +41,13 @@ class BotManager:
     async def get_userbot(self):
         if self._userbot is None:
             try:
-                self._userbot = Client("bot/s1_bot", API_ID, API_HASH)
+                # Используем абсолютный путь для сессии
+                session_path = os.path.join(os.getcwd(), "bot", "s1_bot")
+                self._userbot = Client(session_path, API_ID, API_HASH)
                 await self._userbot.start()
+                logger.info("✅ Userbot успешно инициализирован")
             except Exception as e:
-                logger.error(f"Error initializing userbot: {e}")
+                logger.error(f"❌ Ошибка инициализации юзербота: {e}")
                 raise
         return self._userbot
 
