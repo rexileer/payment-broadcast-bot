@@ -1,27 +1,26 @@
-from django.conf import settings
+import os
+import asyncio
+import time
+import logging
 from aiogram import Bot
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.client.session.aiohttp import AiohttpSession
 from pyrogram import Client
-import logging
-import os
-import asyncio
-import time
 
 logger = logging.getLogger(__name__)
 
 # TELEGRAM
-TOKEN = settings.TELEGRAM_BOT_TOKEN
+TOKEN = os.getenv('TELEGRAM_TOKEN')
 
 # PAYMENT
-PROVIDER_TOKEN = settings.PROVIDER_TOKEN
-TEST_PROVIDER_TOKEN = settings.TEST_PROVIDER_TOKEN
-CURRENCY = settings.CURRENCY
-PRICE = settings.PRICE
+PROVIDER_TOKEN = os.getenv('PROVIDER_TOKEN')
+TEST_PROVIDER_TOKEN = os.getenv('TEST_PROVIDER_TOKEN')
+CURRENCY = os.getenv('СURRENCY')
+PRICE = os.getenv('PRICE')
 
 # API USERBOT
-API_HASH = settings.API_HASH
-API_ID = settings.API_ID
+API_HASH = os.getenv('API_HASH')
+API_ID = os.getenv('API_ID')
 
 class BotManager:
     _instance = None
