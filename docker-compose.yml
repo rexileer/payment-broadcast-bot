@@ -30,6 +30,7 @@ services:
       - .env
     depends_on:
       - db
+      - bot
     networks:
       - network_name
     restart: unless-stopped
@@ -41,10 +42,13 @@ services:
     container_name: ${CONTAINER_NAME}_bot
     command: >
       sh -c "python bot/tg_bot.py & 
+             python bot/http_server.py &
              sleep 40 && 
              python run_check_subscriptions.py"
     volumes:
       - .:/app
+    ports:
+      - "8001:8000"
     env_file:
       - .env
     depends_on:
