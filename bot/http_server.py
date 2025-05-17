@@ -2,12 +2,14 @@ import os
 import django
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from bot.post_sender import send_posting
-from posting.models import PostingMessage
 
 # Настройка Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
+
+# Импорты Django моделей после инициализации
+from posting.models import PostingMessage
+from post_sender import send_posting
 
 class PostingHandler(BaseHTTPRequestHandler):
     def do_POST(self):
