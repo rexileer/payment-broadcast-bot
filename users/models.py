@@ -34,9 +34,10 @@ class UserChannelSubscription(models.Model):
     is_paid = models.BooleanField(default=False)
     banned = models.BooleanField(default=False)
     
-    def _default_subscription():
+    def default_subscription():
         return now() + timedelta(days=180)
-    subscription_until = models.DateTimeField(default=_default_subscription(), blank=True)
+        
+    subscription_until = models.DateTimeField(default=default_subscription, blank=True)
 
     class Meta:
         unique_together = ('user', 'channel')

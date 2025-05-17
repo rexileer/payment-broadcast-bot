@@ -3,13 +3,17 @@ import django
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+# Добавляем путь к корню проекта в PYTHONPATH
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Настройка Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
 # Импорты Django моделей после инициализации
 from posting.models import PostingMessage
-from post_sender import send_posting
+from bot.post_sender import send_posting
 
 class PostingHandler(BaseHTTPRequestHandler):
     def do_POST(self):
