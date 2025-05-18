@@ -1,7 +1,7 @@
 import asyncio
 import threading
 import logging
-from bot.config import bot
+from bot.aiogram_bot import bot
 from aiogram.types import FSInputFile
 from bot.services.user_service import get_all_users
 from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter
