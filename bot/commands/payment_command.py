@@ -36,22 +36,29 @@ async def buy_subscription_by_channel(callback, state: FSMContext):
         if config.provider_token.split(':')[1] == 'TEST':
             await callback.message.reply("Тестовая карта: 1111 1111 1111 1026, 12/22, CVC 000.")
 
-        prices = [LabeledPrice(label='Оплата подписки на 6 мес.', amount=config.price)]
-        await state.set_state(FSMPrompt.buying)
-        
+        # Получаем продукт для этого канала
         try:
-            item = await PaymentItem.objects.afirst()
+            item = await PaymentItem.objects.filter(channel_id=channel_id).afirst()
             if item:
                 title = item.title
                 description = item.description
+                pay_period = item.pay_period_months
+                price = config.price  # Можно добавить price в PaymentItem, если нужно разное
             else:
                 title = "Подписка"
                 description = "Оплата подписки на 6 месяцев"
+                pay_period = 6
+                price = config.price
         except Exception as e:
             logger.error(f"Error getting payment item: {e}")
             title = "Подписка"
             description = "Оплата подписки на 6 месяцев"
-        
+            pay_period = 6
+            price = config.price
+
+        prices = [LabeledPrice(label=f'Оплата подписки на {pay_period} мес.', amount=price)]
+        await state.set_state(FSMPrompt.buying)
+
         await bot.send_invoice(
             chat_id=callback.from_user.id,
             title=title,

@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import User
+from users.models import User, Channel
 
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="payments")
@@ -37,18 +37,18 @@ class PaymentMessage(models.Model):
         verbose_name_plural = 'Платежное сообщение'
 
 class PaymentItem(models.Model):
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='products', verbose_name='Канал', null=True, blank=True)
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=1000)
-
-    def save(self, *args, **kwargs):
-        if PaymentMessage.objects.exists():
-            # Разрешаем обновлять только первую запись
-            self.pk = PaymentMessage.objects.first().pk
-        super().save(*args, **kwargs)
+    pay_period_months = models.PositiveSmallIntegerField(
+        default=6,
+        choices=[(i, f'{i} мес.') for i in range(1, 13)],
+        verbose_name='Срок продления (в месяцах)'
+    )
 
     def __str__(self):
-        return "Редактирование продукта"
-    
+        return f"{self.title} для {self.channel.name} ({self.pay_period_months} мес.)"
+
     class Meta:
         verbose_name = 'Продукт'
-        verbose_name_plural = 'Продукт'
+        verbose_name_plural = 'Продукты'

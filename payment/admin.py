@@ -19,8 +19,6 @@ class PaymentAdmin(admin.ModelAdmin):
     
 @admin.register(PaymentItem)
 class PaymentItemAdmin(admin.ModelAdmin):
-    def has_add_permission(self, request):
-        return not PaymentItem.objects.exists()  # Разрешаем добавлять, только если нет записей
-
-    def has_delete_permission(self, request, obj=None):
-        return False  # Запрещаем удаление
+    list_display = ('title', 'channel', 'pay_period_months', 'description')
+    list_filter = ('channel', 'pay_period_months')
+    search_fields = ('title', 'description')
