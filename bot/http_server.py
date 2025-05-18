@@ -17,24 +17,17 @@ from bot.post_sender import send_posting
 
 class PostingHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        if self.path == '/send_posting/':
+        print(f"Получен путь: {self.path}")
+        if self.path.rstrip('/') == '/send_posting':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
-            
             try:
-                posting = PostingMessage.objects.get(id=data['posting_id'])
-                send_posting(posting)
-                
+                send_posting(data)
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'status': 'success'}).encode())
-            except PostingMessage.DoesNotExist:
-                self.send_response(404)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Posting not found'}).encode())
             except Exception as e:
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')

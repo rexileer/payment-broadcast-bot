@@ -11,16 +11,18 @@ def send_posting_on_create(sender, instance, created, **kwargs):
     print(f"[{now()}] Signal triggered for PostingMessage. Created: {created}")
     if created:
         try:
-            # Отправляем запрос к бот-сервису
-            bot_service_url = os.getenv('BOT_SERVICE_URL', 'http://bot:8000')
+            data = {
+                "posting_id": instance.id,
+                "text": instance.text,
+                "media_type": instance.media_type,
+                "file_path": instance.file.path if instance.file else None,
+            }
             response = requests.post(
-                f"{bot_service_url}/send_posting/",
-                json={'posting_id': instance.id},
-                timeout=5  # 5 секунд таймаут
+                "http://bot:8000/send_posting",
+                json=data,
+                timeout=5
             )
             if response.status_code != 200:
-                print(f"Ошибка при отправке запроса к бот-сервису: {response.text}")
-        except RequestException as e:
-            print(f"Ошибка сети при отправке запроса к бот-сервису: {e}")
+                print(f"Ошибка при отправке запроса к боту: {response.text}")
         except Exception as e:
-            print(f"Неожиданная ошибка при отправке запроса к бот-сервису: {e}")
+            print(f"Ошибка при отправке запроса к боту: {e}")
