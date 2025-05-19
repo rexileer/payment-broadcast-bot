@@ -18,7 +18,7 @@ def send_posting_on_create(sender, instance, created, **kwargs):
                 "file_path": instance.file.path if instance.file else None,
             }
             response = requests.post(
-                "http://bot:8000/send_posting",
+                "http://http_server:8000/send_posting",
                 json=data,
                 timeout=5
             )

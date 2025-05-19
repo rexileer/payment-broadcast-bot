@@ -21,8 +21,12 @@ async def send_message_with_fallback(user_id: int, text: str):
         fallback_msg = FallbackNotificationMessage(text="Пожалуйста, оплатите подписку через бота для доступа к группе.")
 
     try:
+        # Используем userbot из текущего контейнера/сервиса
+        logger.info(f"Инициализация userbot для fallback сообщения пользователю {user_id}")
         userbot = await bot_manager.get_userbot()
+        
+        logger.info(f"Отправляем fallback-сообщение через userbot пользователю {user_id}")
         await userbot.send_message(chat_id=user_id, text=fallback_msg.text)
-        logger.info(f"Fallback-сообщение отправлено через юзербота {user_id}")
+        logger.info(f"Fallback-сообщение отправлено через юзербота пользователю {user_id}")
     except Exception as e:
-        logger.error(f"Ошибка при отправке fallback-сообщения через юзербота {user_id}: {e}")
+        logger.error(f"Ошибка при отправке fallback-сообщения через юзербота пользователю {user_id}: {e}", exc_info=True)

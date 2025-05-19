@@ -13,7 +13,7 @@ services:
       - network_name
     restart: unless-stopped
     cpus: 0.2
-    mem_limit: 128m
+    mem_limit: 256m
 
   web:
     build: .
@@ -30,21 +30,37 @@ services:
       - .env
     depends_on:
       - db
-      - bot
     networks:
       - network_name
     restart: unless-stopped
     cpus: 0.25
     mem_limit: 512m
 
-  bot:
+  tg_bot:
     build: .
-    container_name: ${CONTAINER_NAME}_bot
-    command: >
-      sh -c "python bot/tg_bot.py & 
-             python bot/http_server.py &
-             sleep 40 && 
-             python run_check_subscriptions.py"
+    container_name: ${CONTAINER_NAME}_tg_bot
+    command: python bot/tg_bot.py
+    environment:
+      - SERVICE_TYPE=bot
+    volumes:
+      - .:/app
+      - bot_session:/app/bot/s1_bot  # Отдельный volume для сессии бота
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - network_name
+    restart: unless-stopped
+    cpus: 0.2
+    mem_limit: 256m
+
+  http_server:
+    build: .
+    container_name: ${CONTAINER_NAME}_http
+    command: python bot/http_server.py
+    environment:
+      - SERVICE_TYPE=http
     volumes:
       - .:/app
     ports:
@@ -56,7 +72,27 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-    cpus: 0.4
+    cpus: 0.1
+    mem_limit: 128m
+
+  subscription_checker:
+    build: .
+    container_name: ${CONTAINER_NAME}_subscription_checker
+    command: python run_check_subscriptions.py
+    environment:
+      - SERVICE_TYPE=checker
+    volumes:
+      - .:/app
+      - checker_session:/app/bot/s1_checker  # Отдельный volume для сессии checker
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - network_name
+    restart: unless-stopped
+    cpus: 0.1
+    mem_limit: 256m
 
 networks:
   network_name:
@@ -65,3 +101,5 @@ networks:
 
 volumes:
   postgres_data:
+  bot_session:    # Отдельный volume для сессии бота
+  checker_session:  # Отдельный volume для сессии checker

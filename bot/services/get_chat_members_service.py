@@ -24,6 +24,7 @@ async def get_chat_members(chat_id):
     updated_subs = 0
 
     try:
+        # Используем userbot из текущего контейнера/сервиса
         app = await bot_manager.get_userbot()
         logger.info(f"Проверка доступа к чату: {chat_id}")
         chat = await app.get_chat(int(chat_id))
@@ -37,8 +38,14 @@ async def get_chat_members(chat_id):
                 "is_active": True
             }
         )
+        logger.info(f"Канал обновлен в БД: {channel.name} ({channel.channel_id})")
 
+        # Получаем участников чата
+        logger.info(f"Получение участников чата {chat_id}...")
+        member_count = 0
+        
         async for member in app.get_chat_members(chat_id):
+            member_count += 1
             user_id = member.user.id
             user_name = member.user.username or f"{member.user.first_name} {member.user.last_name or ''}".strip()
             
@@ -60,9 +67,12 @@ async def get_chat_members(chat_id):
                     banned=False
                 )
                 added_users += 1
+                
+            if member_count % 50 == 0:
+                logger.info(f"Обработано {member_count} участников чата {chat_id}")
 
-        logger.info(f"Добавлено пользователей: {added_users}, обновлено подписок: {updated_subs}")
+        logger.info(f"Добавлено пользователей: {added_users}, всего обработано: {member_count}")
         return added_users, updated_subs
     except Exception as e:
-        logger.error(f"Ошибка при получении участников чата {chat_id}: {e}")
+        logger.error(f"Ошибка при получении участников чата {chat_id}: {e}", exc_info=True)
         raise
