@@ -94,12 +94,6 @@ services:
     restart: unless-stopped
     cpus: 0.15
     mem_limit: 250m  # Увеличиваем лимит памяти
-    deploy:
-      resources:
-        limits:
-          memory: 250M
-        reservations:
-          memory: 180M
 
 networks:
   network_name:
