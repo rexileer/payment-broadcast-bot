@@ -161,3 +161,10 @@ cython_debug/
 /media
 bot/s1.session
 s1.session
+# Telegram session files
+bot/*.session
+bot/*.session-journal
+
+# Django migration files
+payment/migrations/000[4-6]_*.py
+users/migrations/0013_*.py
