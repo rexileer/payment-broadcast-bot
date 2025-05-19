@@ -2,8 +2,9 @@ import os
 import django
 import asyncio
 import logging
+import gc  # Сборщик мусора
+import psutil  # Для мониторинга памяти
 from datetime import datetime, timedelta
-import gc
 
 # Устанавливаем тип сервиса для правильного выбора сессии в config.py
 os.environ["SERVICE_TYPE"] = "checker"
@@ -26,8 +27,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-CHECK_INTERVAL_SECONDS = 15 * 60  # каждые 15 минут
+# Настройка интервалов и задержек
+CHECK_INTERVAL_SECONDS = 30 * 60  # каждые 30 минут (вместо 15)
+SCAN_INTERVAL_SECONDS = 6 * 60 * 60  # каждые 6 часов 
 last_check_time = None
+last_scan_time = None
+
+def log_memory_usage():
+    """Логирует текущее использование памяти"""
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    logger.info(f"Использование памяти: {mem_info.rss / 1024 / 1024:.2f} МБ")
 
 async def init_bots():
     """Инициализация ботов при старте"""
