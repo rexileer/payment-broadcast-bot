@@ -3,6 +3,7 @@ import django
 import asyncio
 import logging
 from datetime import datetime, timedelta
+import gc
 
 # Устанавливаем тип сервиса для правильного выбора сессии в config.py
 os.environ["SERVICE_TYPE"] = "checker"
@@ -31,14 +32,23 @@ last_check_time = None
 async def init_bots():
     """Инициализация ботов при старте"""
     try:
-        logger.info("Инициализация Pyrogram Client для проверки подписок...")
-        # Ждем 5 секунд перед инициализацией
-        await asyncio.sleep(10)
-        # Инициализируем юзербота с отдельной сессией для чекера
+        logger.info("Инициализация ботов для проверки подписок...")
+        # Ждем 15 секунд перед инициализацией
+        await asyncio.sleep(15)
+        
+        # Компактно выполняем инициализацию всех нужных компонентов
         await bot_manager.get_userbot()
-        logger.info("✅ Userbot для проверки подписок успешно инициализирован")
+        # Проверяем, что бот доступен
+        if bot_manager.bot:
+            await bot_manager.bot.get_me()
+            logger.info("✅ Aiogram бот успешно проверен")
+            
+        logger.info("✅ Боты успешно инициализированы")
+        # Форсируем сборку мусора
+        gc.collect()
+        log_memory_usage()
     except Exception as e:
-        logger.error(f"❌ Ошибка инициализации userbot: {e}")
+        logger.error(f"❌ Ошибка инициализации ботов: {e}", exc_info=True)
         raise
 
 async def main():

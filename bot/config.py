@@ -51,8 +51,8 @@ class BotManager:
         if cls._instance is None:
             cls._instance = super(BotManager, cls).__new__(cls)
             cls._session = AiohttpSession()
-            # aiogram-бот инициализируем только для сервисов, которым он нужен (bot, http_server)
-            if SERVICE_TYPE in ['bot', 'http']:
+            # aiogram-бот инициализируем для сервисов, которым он нужен (bot, http, checker)
+            if SERVICE_TYPE in ['bot', 'http', 'checker']:
                 logger.info("Инициализация aiogram-бота")
                 cls._bot = Bot(token=TOKEN, session=cls._session, default=DefaultBotProperties(parse_mode='HTML'))
             else:

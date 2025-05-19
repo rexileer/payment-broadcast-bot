@@ -81,6 +81,7 @@ services:
     command: python run_check_subscriptions.py
     environment:
       - SERVICE_TYPE=checker
+      - PYTHONOPTIMIZE=1  # Оптимизация Python для уменьшения потребления памяти
     volumes:
       - .:/app
       - checker_session:/app/bot/s1_checker  # Отдельный volume для сессии checker
@@ -91,8 +92,14 @@ services:
     networks:
       - network_name
     restart: unless-stopped
-    cpus: 0.1
-    mem_limit: 256m
+    cpus: 0.15
+    mem_limit: 250m  # Увеличиваем лимит памяти
+    deploy:
+      resources:
+        limits:
+          memory: 250M
+        reservations:
+          memory: 180M
 
 networks:
   network_name:
